@@ -1,0 +1,185 @@
+# Notes: Day 2 — Structural Design, Object Lifecycle, and Advanced Classpath Mechanics
+
+## 📌 Key Milestones Completed
+
+* **Visual Modeling:** Deep dive into UML 2.0 Class Diagrams and object relationship tracking.
+
+
+* **Active Recall Coding:** Reimplemented a multi-class, multi-directory configuration system entirely from memory.
+
+
+* **Verification Hardening:** Built a native, framework-free automation test runner using the JVM assertion engine (`-ea`).
+
+
+* **Systems Architecture:** Mastered the dichotomy between compile-time boundaries and runtime dynamic execution.
+
+
+
+---
+
+## 📽️ Step 1: Visual Modeling & UML Specifications
+
+* **Lecture Referenced:** *UML 2.0 Class Diagrams Tutorial* (Derek Banas).
+
+
+
+### Class Representation Anatomy
+
+A standard class is modeled using a vertical **3-compartment box**:
+
+1. **Top:** Class Name.
+2. **Middle:** Attributes / Fields (State).
+3. **Bottom:** Methods / Operations (Behavior).
+
+### Access Modifier Notation
+
+Visibility is denoted using concise prefixes before the attribute or method signature:
+
+* `+` **Public:** Visible everywhere. The JVM relies on this access to reach the system application entry point from an external context.
+
+
+* `-` **Private:** Sealed completely inside the class.
+* `#` **Protected:** Accessible to the declaring class and its subclasses.
+* `~` **Package-Private (Default):** Restricted strictly to classes within the same package.
+
+---
+
+## 📐 Step 2: The Object Relationship Spectrum
+
+When mapping out systems, tracking how classes interact dictates your system architecture. The relationships scale on a spectrum from the loosest (transient) to the tightest (bound lifecycles):
+
+```text
+[ Loose Coupling ] -----------------------------------------------------> [ Tight Coupling ]
+     Dependency               Association             Aggregation               Composition
+ (Method Parameter)       (Long-Term Peers)      (Loose Collection)        (Exclusive Death Grip)
+       ..>                       ————>                   ◇————                     ◆————
+
+```
+
+### 1. Dependency (`..>`)
+
+* **Definition:** A transient, temporary "uses" relationship. Class A relies on Class B for a brief duration, typically inside a specific method block.
+
+
+* **Code Footprint:** Class B is passed into a method as a parameter, or instantiated inside a block as a temporary local variable.
+
+
+* **UML Arrow Rule:** **Dotted line with an open arrow.** The arrow points directly **TO** the supplier class being used (`Application ..> Config`).
+
+
+
+### 2. Association (`————>`)
+
+* **Definition:** A structural, long-term connection between independent peer objects. Neither object owns the other; they simply interact over their lifecycles.
+* **Code Footprint:** Class A holds a persistent reference to Class B as an instance variable (field).
+* **UML Arrow Rule:** Solid line pointing to the class being referenced.
+
+### 3. Aggregation (`◇————`)
+
+* **Definition:** A asymmetric **"Whole-to-Part"** or container relationship where the parts can survive outside the container.
+* **Code Footprint:** The child objects are created *outside* the container class and passed into it via constructor injection or setter methods.
+* **The Lifetime Test:** If the container is destroyed, the contained objects survive.
+* **UML Arrow Rule:** Solid line with an **empty/hollow diamond attached to the "Whole"** (the container).
+
+### 4. Composition (`◆————`)
+
+* **Definition:** A strict **"Whole-to-Part"** relationship governing exclusive ownership and absolute lifecycle dependency.
+* **Code Footprint:** The parent container "gives birth" to the child object internally (e.g., inside its constructor). The child is rarely exposed directly to the outside world.
+* **The Lifetime Test:** If the container object dies, the child objects are instantly destroyed along with it.
+* **UML Arrow Rule:** Solid line with a **filled/solid black diamond attached to the "Whole"**.
+
+---
+
+## 📖 Step 3: Core Reading Insights — "A Trip to Objectville"
+
+* **Source:** *Head First Java* (Chapter 2, Pages 27–48).
+
+
+
+### 🏛️ Paradigm Shift: Procedural vs. Object-Oriented Design
+
+* **Procedural Design:** Relies heavily on global data structures and isolated procedures/functions that manipulate that data. As a system scales, a small modification to a data structural format causes a massive domino error effect across disparate functions.
+* **Object-Oriented Design:** Packages state (data) and behavior (methods) cleanly inside self-contained objects. It uses encapsulation to shield internal values, preventing global data contamination and making modules cleanly extendable without side effects.
+
+### 🧠 Blueprints vs. The Heap
+
+* **The Class:** A compile-time blueprint text file containing the rules, specifications, types, and structure of an object. It takes up no heap space.
+* **The Object:** A live runtime entity allocated memory inside the JVM Heap.
+* **The Reference Variable:** A pointer variable stored on the thread stack that holds the specific memory address of an object on the heap. Ripping away or nullifying the reference variable cuts the thread's connection to the object, rendering it a candidate for the JVM Garbage Collector.
+
+---
+
+## 💻 Step 4: Coding Exercise Hardening & Toolchain Mechanics
+
+### 🏗️ File Infrastructure & Setup
+
+To test manual package building and path resolution from a clean terminal workspace, classes were arranged across isolated conceptual directories:
+
+```text
+workspace/
+├── Config.java         <- Returns system greeting string
+├── Application.java    <- Contains main entry point method
+├── AppTester.java     <- Formulates built-in verification logic
+└── bin/                <- Dedicated destination target for compiled bytecode
+
+```
+
+### 🛠️ Terminal Execution Steps (Compilation & Decoupling)
+
+#### 1. Compile with Destination Management
+
+We use the `-d` (destination) compiler flag to compile our dependencies and redirect the artifact directly into our destination folder without generating messy workspace clutter:
+
+```bash
+javac -d bin/ Config.java Application.java AppTester.java
+
+```
+
+#### 2. Verify Automation via the Native Assertion Engine
+
+Java bypasses assertion execution by default to ensure optimized production runtime cycles. To turn our code into a primitive test runner, we must pass the explicit **Enable Assertions flag (`-ea`)** along with our explicit classpath definition:
+
+```bash
+# Unix-based Systems (Linux/macOS)
+java -ea -cp bin:. AppTester
+
+# Windows CMD / PowerShell
+java -ea -cp "bin;." AppTester
+
+```
+
+If a conditional check inside our test script fails, the JVM intercepts the instruction and drops a clean, localized `AssertionError` directly to standard output.
+
+---
+
+## 🚀 Step 5: Engineering Insight — Compile-Time vs. Runtime
+
+| Characteristic | Compile-Time Dependencies (`javac`) | Runtime Dependencies (`java`) |
+| --- | --- | --- |
+| **Enforcer** | The Java Compiler. | The JVM Dynamic ClassLoader. |
+| **Objective** | Verifies type safety, valid method definitions, syntactic accuracy, and strict contract matches. | Locates, links, and loads explicit bytecode blocks dynamically into heap memory for immediate execution. |
+| **Artifact** | Raw `.java` source code paths and structural library headers. | Compiled `.class` files bundled into structural paths or JAR binaries on the active Classpath. |
+
+### Architectural Importance
+
+This strict division allows us to compile code against static interface contracts while choosing or altering the implementation bytecode completely on the fly at runtime. This structural mechanic is what enables frameworks like Spring to execute Dependency Injection and tools like JUnit to load tests without compile-time knowledge of our classes.
+
+---
+
+## 🧠 Step 6: Core Knowledge Retention Check
+
+### 1. If you compile a program and delete a class that is never instantiated during execution, will the JVM crash at startup?
+
+**No.** Because the JVM utilizes a lazy, on-demand class-loading policy. It initializes minimal entry parameters at boot and waits until an instruction explicitly reaches out to load a missing reference type before performing a lookup on the classpath.
+
+### 2. How does the `-ea` flag alter bytecode configuration?
+
+It **does not alter bytecode at all**. The compiler *always* generates assertion logic inside the compiled `.class` file. The `-ea` flag acts as a configuration directive to the JVM runtime engine, signaling it to evaluate those evaluation bytes instead of skipping over them.
+
+### 3. Why is the relationship between `Application` and `Config` a dependency (`..>`) over an association (`————>`)?
+
+Because the `Application` class does not preserve a persistent reference to `Config` inside a class-level instance variable (field). The object lookup is localized entirely within the short-lived scope of a single method run block, making it a transient connection.
+
+### 4. Why are package-private classes (default visibility) ideal for decoupling dependencies?
+
+They limit structural access exclusively to elements inside that package context. By making internal engine classes package-private and exposing only a lean, clean interface as `public`, you block external classes from compiling against your internal utilities. This lets you refactor or delete internal code anytime without breaking external consumer projects.
