@@ -17,14 +17,12 @@ public class IndexPlayground {
         try {
             System.out.println("Printing the out of bound index : " + arr[23]);
         } catch (Exception e) {
-            // TODO: handle exception
             System.out.println("here I catch the exception for the primitive array : " + e.getClass().getSimpleName());
         }
 
         try {
             System.out.println("Printing the out of bound index : " + list.get(5));
         } catch (Exception e) {
-            // TODO: handle exception
             System.out.println("here I catch the exception for the arraylist : " + e.getClass().getSimpleName());
         }
 
