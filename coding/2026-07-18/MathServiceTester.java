@@ -9,7 +9,7 @@ public class MathServiceTester {
         boolean isNull = false;
 
         try {
-            ms.calculateAverage(null);
+            ms.calculateAverage(arr);
         } catch (IllegalArgumentException e) {
             isNull = true;
             System.out.println("Exception catched for test case 1 : " + e.getClass().getName());
@@ -24,7 +24,7 @@ public class MathServiceTester {
         isNull = false;
 
         try {
-            ms.calculateAverage(null);
+            ms.calculateAverage(newArray);
         } catch (IllegalArgumentException e) {
             isNull = true;
             System.out.println("Exception catched for test case 2 : " + e.getClass().getName());
